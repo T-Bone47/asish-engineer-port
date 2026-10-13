@@ -1,0 +1,52 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# env — ignore every .env variant, not just .local. NEXT_PUBLIC_SITE_URL
+# belongs in .env.local; a stray committed .env would carry it plus
+# anything else added later.
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# ---------------------------------------------------------------------------
+# Agent tooling (regenerate with `npx impeccable install --project`)
+# The design/UX skill harnesses each carry a ~19MB compiled binary and the
+# installer writes one copy per detected agent. That is ~150MB of generated
+# machine-specific tooling that has no business in version control — the
+# installer recreates it on demand. Project context lives in PRODUCT.md /
+# DESIGN.md / docs/, which ARE committed.
+# ---------------------------------------------------------------------------
+/.agent/
+/.agents/
+/.claude/
+/.codex/
+/.gemini/
+/.grok/
+/.kiro/
+/.opencode/
+/.pi/
+/skills/
+
+# Local agent state
+/.freebuff/
+/.hermes/
+

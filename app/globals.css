@@ -1,0 +1,922 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   DESIGN TOKENS — Asish Oliver M Portfolio
+   Three-layer architecture (primitive → semantic → component), per the
+   design-system skill. Full rationale: /docs/design-tokens.md
+   Rule: components reference semantic/component tokens only.
+   Nothing outside this file should contain a raw hex value.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   LAYER 1 — PRIMITIVE TOKENS
+   Raw values. Never referenced directly from components.
+   --------------------------------------------------------------------- */
+:root {
+  /* Neutrals — near-black base per spec §8, cool-neutral (not warm/OLED-pure-black) */
+  --primitive-neutral-950: #0a0b0d;
+  --primitive-neutral-900: #121317;
+  --primitive-neutral-800: #1b1d22;
+  --primitive-neutral-700: #2b2e35;
+  --primitive-neutral-500: #8b8f98;
+  --primitive-neutral-300: #b8bbc2;
+  --primitive-neutral-50: #f1f2f4;
+
+  /* Accent — "papaya": the warning-lamp orange of a pit wall / race
+     control screen. Replaces the previous telemetry-green accent, which
+     read as "generic dev terminal" more than "motorsport engineering".
+     600/500/400 form one hue ramp so hover and pressed states stay on
+     the same light source rather than jumping hue. */
+  --primitive-papaya-600: #e8600a;
+  --primitive-papaya-500: #ff7a18;
+  --primitive-papaya-400: #ffa45c;
+  --primitive-papaya-950: #2b1405;
+
+  /* Secondary — telemetry cyan. Strictly a *data* channel: secondary
+     series in a trace, a second axis, a diagram edge type. Never
+     decoration, and never competing with the accent for hierarchy. */
+  --primitive-telemetry-500: #47c7e0;
+  --primitive-telemetry-900: #0b2b33;
+
+  /* Live — demoted from the old accent role. Green now means exactly one
+     thing: "this is running right now". Keeping it green while the accent
+     turned orange is what stops active-status and hierarchy from reading
+     as the same signal. */
+  --primitive-live-500: #3ddc84;
+  --primitive-live-900: #0d2a1b;
+
+  /* Reserved for destructive/error states only — must stay visually
+     distinct from both the accent and "live" so "critical" never reads
+     as "active". */
+  --primitive-critical-500: #f0453e;
+
+  /* Fonts — see docs/design-tokens.md for pairing rationale.
+     var(--font-barlow-condensed) etc. are injected by next/font via a
+     className on <html> (see app/layout.tsx); the literal strings
+     after each are the fallback stack if that ever fails to load. */
+  --primitive-font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --primitive-font-body: var(--font-inter), "Helvetica Neue", Arial, sans-serif;
+  --primitive-font-technical: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+}
+
+/* ---------------------------------------------------------------------
+   LAYER 2 — SEMANTIC TOKENS
+   Purpose aliases. Mapped into Tailwind's theme so utilities like
+   bg-background, text-foreground, text-accent, border-subtle work.
+   --------------------------------------------------------------------- */
+@theme {
+  --color-background: var(--primitive-neutral-950);
+  --color-surface: var(--primitive-neutral-900);
+  --color-surface-raised: var(--primitive-neutral-800);
+
+  --color-foreground: var(--primitive-neutral-50);
+  --color-foreground-muted: var(--primitive-neutral-300);
+  --color-foreground-faint: var(--primitive-neutral-500);
+
+  --color-border-subtle: var(--primitive-neutral-800);
+  --color-border-strong: var(--primitive-neutral-700);
+
+  --color-accent: var(--primitive-papaya-500);
+  --color-accent-strong: var(--primitive-papaya-400);
+  --color-accent-deep: var(--primitive-papaya-600);
+  --color-accent-wash: var(--primitive-papaya-950);
+
+  /* Data/secondary channel — trace series 2+, diagram edge types. */
+  --color-data: var(--primitive-telemetry-500);
+  --color-data-wash: var(--primitive-telemetry-900);
+
+  /* Live state only — never used for hierarchy or decoration. */
+  --color-live: var(--primitive-live-500);
+  --color-live-wash: var(--primitive-live-900);
+
+  --color-critical: var(--primitive-critical-500);
+
+  /* Three functional type roles per spec §9 */
+  --font-display: var(--primitive-font-display);
+  --font-body: var(--primitive-font-body);
+  --font-technical: var(--primitive-font-technical);
+
+  /* Tailwind v4's spacing scale multiplies this base — 0.25rem (4px)
+     reproduces the 4/8/12/16/24/32/48/64/96px scale the layout uses
+     throughout (p-1 … p-24) without any extra token definitions. */
+  --spacing: 0.25rem;
+
+  /* Fluid display sizes for hero / section titles (spec §14, §80) */
+  --text-display-xl: clamp(2.75rem, 3.2vw + 2rem, 6.5rem);
+  --text-display-lg: clamp(2rem, 2vw + 1.5rem, 3.75rem);
+  --text-display-md: clamp(1.5rem, 1vw + 1.25rem, 2.25rem);
+}
+
+/* ---------------------------------------------------------------------
+   LAYER 3 — COMPONENT TOKENS
+   Component-specific aliases layered on top of semantic tokens.
+   Kept in plain :root (not @theme) since these aren't meant to
+   generate their own Tailwind utilities — components read them
+   directly via var(--button-bg) etc.
+   --------------------------------------------------------------------- */
+:root {
+  --button-bg: var(--color-accent);
+  --button-fg: var(--primitive-neutral-950);
+  --button-bg-hover: var(--color-accent-strong);
+
+  /* The header's "System Status: Online" lamp is a *state* indicator, not
+     a brand accent — it uses the reserved live green so it can never be
+     mistaken for a heading or CTA. */
+  --status-online-color: var(--color-live);
+  --status-online-glow: 0 0 0 rgba(61, 220, 132, 0);
+
+  --hud-line-color: var(--color-border-strong);
+  --hud-label-color: var(--color-foreground-faint);
+}
+
+/* ---------------------------------------------------------------------
+   BASE STYLES
+   --------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+html {
+  color-scheme: dark;
+  /* Browser chrome themed from the palette rather than left at platform
+     defaults. `scrollbar-color` / `scrollbar-width` cover Firefox and
+     current Chromium; the ::-webkit-* rules below cover the engines that
+     still ignore them. Without this the page had a bright platform
+     scrollbar sitting against a #0A0B0D surface. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) var(--color-background);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-foreground-faint);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  /* The text caret is a browser surface too; it takes the accent so it
+     belongs to this palette instead of the OS default. */
+  caret-color: var(--color-accent);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--primitive-neutral-950);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   The boot-sequence keyframes (`.animate-boot-fade-in`,
+   `.animate-boot-fill-bar`) were removed along with
+   components/home/SystemBoot.tsx. They existed only to fill four fake
+   progress bars for a system that does not exist; the hero's right column
+   now holds a real architecture figure. No dead CSS is left behind.
+   --------------------------------------------------------------------- */
+
+/* =====================================================================
+   MOTION SYSTEM — "Engineering in Motion"
+
+   One token layer, a small set of named primitives, and one rule about
+   failure. Full rationale and measurements:
+   docs/MOTION_SYSTEM_AUDIT.md and docs/MOTION_SYSTEM_IMPLEMENTATION_REPORT.md
+
+   THE RULE THAT GOVERNS EVERYTHING BELOW. The hidden state of every
+   animation exists ONLY inside `@media (prefers-reduced-motion:
+   no-preference)`, and every scroll-linked one additionally inside
+   `@supports (animation-timeline: view())`. Outside those blocks the
+   selectors do not match and the element renders in its final, visible
+   state. The unsafe state is therefore unreachable by default rather
+   than reachable by default — which is what keeps requirement TR4
+   ("content renders without JavaScript") true for a page whose entire
+   motion layer is CSS.
+
+   WHY NO ANIMATION LIBRARY. The Motion skill was consulted
+   (.agents/skills/motion, best-practices/ — self-contained). Its MCP
+   tiers (docs search, MotionScore, spring generation) are unconfigured
+   here, and the library itself would be the wrong trade for this site:
+   Motion for React animates *client* components, and PRD TR3 caps this
+   project at two client files with the rest server-rendered. Every
+   effect specified for this pass is expressible in CSS — transform and
+   opacity, existing SVG geometry, and scroll-driven timelines — so the
+   choice is CSS-first and the dependency count stays at three.
+   Two exceptions to compositor-only animation are named and bounded:
+   `.trace-draw` and `.diagram-connector-*` animate stroke-dashoffset /
+   the scale of one- and two-pixel connector rules. Both are measured in
+   the implementation report rather than assumed cheap.
+   --------------------------------------------------------------------- */
+
+/* ---- Motion tokens: the single source for duration, easing, distance
+   and stagger. Components reference these through the utility classes
+   below or through Tailwind's own duration utilities, and
+   lib/motion.test.ts fails the build if a component hardcodes a duration
+   or an easing curve of its own. ---- */
+:root {
+  /* Durations. 150ms is the interaction floor from the UI UX Pro Max
+     checklist ("150–300 ms hover") and is used for every hover/focus
+     surface. `instant` sits just below it, for changes that must read as
+     state rather than as motion: the state colour on a hovered/focused
+     row, and the disclosure caret. Reveals sit above it because they are
+     spatial; the signature draw is deliberately slower than everything
+     else because it is the one moment the site asks to be watched. */
+  --motion-duration-instant: 90ms; /* @kind duration */
+  --motion-duration-fast: 150ms; /* @kind duration */
+  --motion-duration-base: 240ms; /* @kind duration */
+  --motion-duration-reveal: 520ms; /* @kind duration */
+  --motion-duration-draw: 1100ms; /* @kind duration */
+  --motion-duration-ambient: 6400ms; /* @kind duration */
+
+  /* Easings — one exponential ease-out family, no overshoot. The brief
+     bans bounce and elastic, and overshoot reads as sloppy on dense
+     informational UI; a mechanical settle is the register this site is
+     written in. `--motion-ease-mechanical` is the expo-out used by the
+     signature draw, where the motion should arrive early and settle
+     long. */
+  --motion-ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1); /* @kind easing */
+  --motion-ease-mechanical: cubic-bezier(0.16, 1, 0.3, 1); /* @kind easing */
+
+  /* Distances. Interface motion is short on purpose: a reveal that
+     travels further than ~14px reads as a transition, not a reveal. */
+  --motion-lift-sm: 8px; /* @kind distance */
+  --motion-lift: 14px; /* @kind distance */
+  --motion-lift-glyph: 6px; /* @kind distance */
+
+  /* Stagger steps. Grouped elements (list rows, diagram nodes) step by
+     one of these so a group reads as a sequence rather than a flash.
+     The step scales with the size of the thing being staggered: glyphs
+     inside one figure step tight, whole rows step loose. */
+  --motion-stagger-tight: 55ms; /* @kind stagger */
+  --motion-stagger: 80ms; /* @kind stagger */
+  --motion-stagger-loose: 130ms; /* @kind stagger */
+}
+
+/* ---- Ambient motion -------------------------------------------------
+   The only looping animation on the site: a low-amplitude breathe on the
+   signature figure's sector markers. It is what "settles into a subtle
+   ambient state" means here — amplitude 0.12, 6.4s period, and it is
+   gated with everything else, so reduced-motion readers get a static
+   figure. Nothing else loops; a second loop would compete with it. */
+@keyframes ambient-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---- Section reveal (scroll-driven, no JS) --------------------------
+   See components/ui/Reveal.tsx. Scroll-driven rather than time-driven:
+   the reveal tracks the element's own position in the viewport, so it
+   cannot desync, cannot be "missed" by a fast scroll, and queues no
+   callback per frame. The trade-off is honest and worth stating: because
+   the timeline is the scroll position itself, scrolling back up reverses
+   the reveal (content recedes as it leaves). Nothing replays from the
+   top, and nothing is ever left hidden. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 30%;
+    }
+
+    /* Reveal that orchestrates its own children instead of appearing as
+       one block. Each child gets its own view timeline, so a list reads in
+       order as it enters — used by the /work index, where nine rows
+       arriving as one slab would hide the fact that there are nine. Only
+       direct children are touched, so a row's internal layout is
+       untouched. */
+    .reveal-group > * {
+      animation: reveal-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 34%;
+    }
+    /* The looser stagger step, deliberately: these children are whole
+       rows, not glyphs inside one figure. A tight step made nine rows
+       arrive as a single flash, which is the effect the group was added
+       to avoid. */
+    .reveal-group > *:nth-child(1) {
+      animation-delay: 0ms;
+    }
+    .reveal-group > *:nth-child(2) {
+      animation-delay: calc(var(--motion-stagger-loose) * 1);
+    }
+    .reveal-group > *:nth-child(3) {
+      animation-delay: calc(var(--motion-stagger-loose) * 2);
+    }
+    .reveal-group > *:nth-child(4) {
+      animation-delay: calc(var(--motion-stagger-loose) * 3);
+    }
+    .reveal-group > *:nth-child(5) {
+      animation-delay: calc(var(--motion-stagger-loose) * 4);
+    }
+    .reveal-group > *:nth-child(n + 6) {
+      animation-delay: calc(var(--motion-stagger-loose) * 5);
+    }
+  }
+}
+
+/* Under reduced motion — and in browsers without view timelines — a
+   grouped reveal collapses to no animation at all, and the group's
+   children render in their natural, visible state. There is no separate
+   reduced-motion block to write here because the whole mechanism lives
+   inside the `@supports` + `no-preference` opt-in above. */
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-lift));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Hero sequence (time-driven, above the fold) --------------------
+   The hero is at the top of the document, so a scroll-driven timeline
+   would report it as already settled and there would be no entrance at
+   all. It is therefore time-driven and short: four items, 80ms apart,
+   ~520ms each, so the whole identity block has finished arriving well
+   inside a second.
+
+   The H1 is deliberately excluded from the opacity fade. It is the
+   largest-contentful-paint element, and fading it in delays the moment
+   the browser counts it as painted. Its entrance is a translate only —
+   it is on screen and legible from the first frame, and still moves. */
+@media (prefers-reduced-motion: no-preference) {
+  .seq > * {
+    animation: seq-rise var(--motion-duration-reveal) var(--motion-ease-standard) both;
+  }
+  .seq > *:nth-child(1) {
+    animation-name: seq-rise-quiet;
+    animation-delay: 0ms;
+  }
+  .seq > *:nth-child(2) {
+    animation-delay: calc(var(--motion-stagger) * 1);
+  }
+  .seq > *:nth-child(3) {
+    animation-delay: calc(var(--motion-stagger) * 2);
+  }
+  .seq > *:nth-child(4) {
+    animation-delay: calc(var(--motion-stagger) * 3);
+  }
+  .seq > *:nth-child(n + 5) {
+    animation-delay: calc(var(--motion-stagger) * 4);
+  }
+
+  /* A list inside a sequenced block keeps the same order but a tighter
+     step, so the roles read as one thought rather than three. */
+  .seq-tight > * {
+    animation: seq-rise var(--motion-duration-base) var(--motion-ease-standard) both;
+  }
+  .seq-tight > *:nth-child(1) {
+    animation-delay: calc(var(--motion-stagger) * 1);
+  }
+  .seq-tight > *:nth-child(2) {
+    animation-delay: calc(var(--motion-stagger) * 1 + var(--motion-stagger-tight));
+  }
+  .seq-tight > *:nth-child(3) {
+    animation-delay: calc(var(--motion-stagger) * 1 + var(--motion-stagger-tight) * 2);
+  }
+  .seq-tight > *:nth-child(n + 4) {
+    animation-delay: calc(var(--motion-stagger) * 1 + var(--motion-stagger-tight) * 3);
+  }
+}
+
+@keyframes seq-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-lift));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Translate only — no opacity — so the LCP element paints immediately. */
+@keyframes seq-rise-quiet {
+  from {
+    transform: translateY(var(--motion-lift-sm));
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* ---- Instrument motifs (nine projects, one primitive) ---------------
+   Every project motif is drawn by components/work/instrument-geometry.tsx
+   and rendered by InstrumentSvg, so the nine project visuals get one
+   entrance from one rule rather than nine bespoke animations. Each direct
+   child of the motif rises into place in draw order.
+
+   transform/opacity only: the glyph factories deliberately use no
+   `transform` presentation attributes, so a CSS transform here can never
+   fight an attribute for the same property. */
+@media (prefers-reduced-motion: no-preference) {
+  .instrument > * {
+    animation: glyph-in var(--motion-duration-base) var(--motion-ease-standard) both;
+  }
+  .instrument > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .instrument > *:nth-child(2) {
+    animation-delay: calc(var(--motion-stagger-tight) * 1);
+  }
+  .instrument > *:nth-child(3) {
+    animation-delay: calc(var(--motion-stagger-tight) * 2);
+  }
+  .instrument > *:nth-child(4) {
+    animation-delay: calc(var(--motion-stagger-tight) * 3);
+  }
+  .instrument > *:nth-child(5) {
+    animation-delay: calc(var(--motion-stagger-tight) * 4);
+  }
+  .instrument > *:nth-child(6) {
+    animation-delay: calc(var(--motion-stagger-tight) * 5);
+  }
+  .instrument > *:nth-child(7) {
+    animation-delay: calc(var(--motion-stagger-tight) * 6);
+  }
+  .instrument > *:nth-child(n + 8) {
+    animation-delay: calc(var(--motion-stagger-tight) * 7);
+  }
+}
+
+@keyframes glyph-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-lift-glyph));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Signature trace (the site's one authored moment) ---------------
+   The circuit map and the speed profile draw themselves, then hold. No
+   path length is measured in advance and no JS computes one: the paths
+   carry `pathLength="1000"`, which redefines each path's own length as
+   1000 user units, so one dash pair draws any path cleanly.
+
+   Scroll-driven, not time-driven, and measured rather than assumed: at
+   1440x900 the figure begins at y=792 of a 900px viewport, so an entrance
+   played on load would fire while four fifths of it is still below the
+   fold. Driving it from the view timeline means it draws where the reader
+   can actually see it, at every viewport height, with no fold arithmetic.
+   (See the report: this is also why the *hero text* is time-driven and
+   this is not — the hero is fully on screen at load.)
+
+   ORDER COMES FROM THE TIMELINE, NOT FROM DELAYS. Each step owns a
+   window of the entry phase (`animation-range`), so the grid, the track,
+   the sectors and the profile arrive in sequence without an
+   `animation-delay` having to be interpreted against a scroll timeline.
+   One window may overlap the next only where two things genuinely move
+   together — the sector markers ride the trace that just passed them. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .trace-step {
+      animation-timeline: view();
+      animation-fill-mode: both;
+    }
+    .trace-draw {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation-name: trace-draw;
+      animation-duration: var(--motion-duration-draw);
+      animation-timing-function: var(--motion-ease-mechanical);
+    }
+    .trace-fade {
+      animation-name: trace-fade;
+      animation-duration: var(--motion-duration-reveal);
+      animation-timing-function: var(--motion-ease-standard);
+    }
+    /* 1 — grid, then 2 — registration marks */
+    .trace-step-1 {
+      animation-range: entry 0% entry 16%;
+    }
+    .trace-step-2 {
+      animation-range: entry 5% entry 24%;
+    }
+    /* 3 — the circuit draws across the full width */
+    .trace-step-3 {
+      animation-range: entry 12% entry 62%;
+    }
+    /* 4 — sector markers and their labels ride the trace */
+    .trace-step-4 {
+      animation-range: entry 48% entry 68%;
+    }
+    /* 5 — the speed profile draws beneath, x-aligned to the track */
+    .trace-step-5 {
+      animation-range: entry 58% entry 88%;
+    }
+    /* 6 — axis ticks and the distance label close the figure */
+    .trace-step-6 {
+      animation-range: entry 76% entry 98%;
+    }
+  }
+}
+
+/* The resting state. One low-amplitude breathe on the sector markers —
+   the only looping animation on the site. It is time-driven because a
+   loop has no end state for a scroll timeline to hold, and it is delayed
+   past the draw so the figure is never pulsing while it is still being
+   drawn. Cost is three small circles' opacity; see the report. */
+@media (prefers-reduced-motion: no-preference) {
+  .trace-ambient {
+    animation: ambient-breathe var(--motion-duration-ambient) var(--motion-ease-standard) infinite;
+  }
+}
+
+@keyframes trace-draw {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes trace-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- Engineering diagrams -------------------------------------------
+   Nodes arrive in order and their connectors draw between them, then the
+   whole figure holds static. The connectors are the one- and two-pixel
+   rules the components already drew — a scale from 0 to 1 on an element
+   that is already positioned reads as a line being drawn, costs a
+   compositor transform, and needs no new geometry. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .diagram-node {
+      animation: reveal-rise var(--motion-duration-reveal) var(--motion-ease-standard) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 32%;
+    }
+    .diagram-connector-y {
+      transform-origin: top;
+      animation: connector-y var(--motion-duration-reveal) var(--motion-ease-standard) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+    .diagram-connector-x {
+      transform-origin: left;
+      animation: connector-x var(--motion-duration-reveal) var(--motion-ease-standard) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+/* `animation-timeline` is the one property the whole scroll layer depends
+   on, so every block that uses it is nested inside
+   `@supports (animation-timeline: ...)` as well as the reduced-motion
+   opt-in. A browser without view timelines matches none of those blocks,
+   which is why lib/motion.test.ts can assert that no element can be left
+   in a hidden state there: the hidden state does not exist outside them. */
+
+@keyframes connector-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes connector-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---- Flow-direction arrowhead ---------------------------------------
+   Two of the diagram families carry a `↓` between stages to state the
+   direction the data moves. The connector rules draw; the arrowheads
+   stayed flat, so the figures said "a line arrives here" without saying
+   where it arrives *from*.
+
+   The arrow is now the second child of the node that owns it — so it rides
+   the node's own `.diagram-node` window, which is what the report means by
+   "labels appear with their associated component" — and additionally
+   brightens to accent when the reader is on that stage. The two named
+   families that opt in (`group/stage`, `group/stage-connector`) are the
+   ones with a stage concept; a lineage or evidence table has no stage to
+   hover, and giving every arrow a hover state would be decoration with
+   nothing behind it.
+
+   Brightness, never movement: these glyphs are 9–10px, and travelling at
+   that size is unreadable rather than expressive. It also means the
+   direction cue survives `prefers-reduced-motion` untouched — colour is
+   not one of the properties the brief asks to strip.
+
+   SELECTORS ARE ESCAPED, AND THIS IS A BUG THIS FILE ONCE HAD. The stages
+   use Tailwind's `group/stage` utility, whose *class name* is the literal
+   string `group/stage`. Written unescaped as `.group/stage` a selector
+   parser reads `/stage` as a universal selector plus a type selector, the
+   whole rule is invalid, and every browser drops it silently — so the first
+   version of this block matched nothing at all and the hover never fired.
+   Tailwind's own generated CSS writes `\/`; this has to as well. */
+.connector-arrow {
+  transition: color var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.group\/stage:hover .connector-arrow,
+.group\/stage:focus-within .connector-arrow,
+.group\/stage-connector:hover .connector-arrow {
+  color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connector-arrow {
+    transition: none;
+  }
+}
+
+/* ---- Case-study reading progress ------------------------------------
+   Orientation on long case studies, drawn from the actual scroll of the
+   document. Pure CSS scroll timeline, one compositor transform, no JS, no
+   scroll listener, and nothing to clean up. It sits above the sticky
+   header so it is never occluded by it, and it is the same accent trace
+   language as the rest of the system. */
+/* Base state: flat. This is the one place a hidden state is set outside the
+   gates, and it is deliberate. The bar is `aria-hidden` decoration whose
+   only meaning is "how far through this page you are" — a meaning it can
+   only carry while a scroll timeline can drive it. Without one, the correct
+   fallback is an invisible bar, not a full-width accent line sitting
+   permanently under the header pretending to be a ruler that never moves. */
+.reading-progress {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .reading-progress {
+      animation: progress-grow linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
+@keyframes progress-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---- Interaction primitives ----------------------------------------
+   Hover/focus rules are one shared shape: a hairline that scales from
+   the left on hover AND on keyboard focus, so a pointer user and a
+   keyboard user get the same feedback. Transform only, so no layout is
+   touched and no adjacent content moves. */
+@media (prefers-reduced-motion: no-preference) {
+  .rule-expand {
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--motion-duration-base) var(--motion-ease-standard);
+  }
+  .group-row:hover .rule-expand,
+  .group-row:focus-visible .rule-expand,
+  .group-row:focus-within .rule-expand {
+    transform: scaleX(1);
+  }
+  .rule-expand-on-active {
+    transform: scaleX(1);
+  }
+}
+
+/* Under reduced motion the rule is simply present on hover/focus — the
+   state is never communicated by movement alone. */
+@media (prefers-reduced-motion: reduce) {
+  .rule-expand {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .group-row:hover .rule-expand,
+  .group-row:focus-visible .rule-expand,
+  .group-row:focus-within .rule-expand,
+  .rule-expand-on-active {
+    transform: scaleX(1);
+  }
+}
+
+/* ---- Project-row motif ----------------------------------------------
+   The row reveals its project's own instrument on hover and on keyboard
+   focus — the third response of the three the row's comment claims, and
+   the one that makes nine rows read as nine different systems rather than
+   nine instances of the same card.
+
+   WHY A SECOND RULE INSTEAD OF `.instrument`. The index-row motif is
+   *held back* until interaction, while the case-study hero motif plays on
+   scroll. One rule cannot express both without either hiding the hero's
+   figure or animating every row on load, so this is a sibling with the
+   same shape: same stagger, same keyframe, same gate.
+
+   The glyphs are covered at rest by a mask and revealed when the row is
+   entered. A mask rather than an opacity on the glyph itself: two of the
+   nine motifs author `opacity` as *artwork* — Football Intelligence OS's
+   provider streams sit at 0.85 and its snapshots at 0.75, a deliberate
+   depth cue — and animating a glyph's own opacity overwrites that authored
+   value to either 0 or 1 and loses it. A mask has no authored value to
+   clobber, so the drawing is untouched underneath.
+
+   The mask is a pseudo-element, so it is free: no extra node in the DOM, no
+   SVG change, and the geometry module stays byte-identical to the copy that
+   renders the social cards. It is also why the row's layout is identical at
+   rest, on hover and while focused — the mask is laid over the figure rather
+   than hiding it, so nothing reflows when the motif arrives.
+
+   `motion-reduce` removes the mask outright: a reduced-motion reader gets
+   the motif as a static figure the moment the row is entered, with no
+   transition and no movement. Removing the figure instead would take
+   information away from exactly the readers the reduced-motion preference
+   is protecting.
+
+   Scrolled past the row and back? `:hover` and `:focus-visible` are state,
+   not timelines, so nothing replays and nothing is left half-revealed. */
+.instrument-row {
+  position: relative;
+}
+.instrument-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Near-opaque, and deliberately not a solid colour. The row tints to
+     `bg-surface/50` on hover and to `bg-surface/50` on keyboard focus, so
+     an opaque cover would blot that tint out from under it — which is
+     also the state the reader is in *while* the mask is fading, so the
+     two effects would fight for the same pixels. At alpha 0.94 the mask
+     composites most of the row's own surface and lets the tint through,
+     and at alpha 0 it composites all of it.
+
+     Why not alpha 1 with no tint at all: at rest that would be a flat
+     rectangle sitting over the figure, visible as a lighter block against
+     the section it sits in. Matching the surface means the held-back
+     motif is invisible rather than covered. */
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  opacity: 1;
+  transition:
+    opacity var(--motion-duration-base) var(--motion-ease-standard);
+  pointer-events: none;
+}
+.instrument-row:hover::after,
+.instrument-row:focus-visible::after,
+.instrument-row:focus-within::after {
+  opacity: 0;
+  transition-delay: 0ms;
+}
+
+/* ---- The same, addressed from the row --------------------------------
+   THE BUG THIS RULE EXISTS TO FIX. The three selectors above fire on
+   `:hover` of the *rail* — but the rail is the motif itself, which is
+   exactly the element the pointer has to be over for it to apply. In
+   practice a reader hovers the row's text, title and metadata, and the
+   rail's own hover is never entered, so the mask never lifted on a real
+   pointer. It only worked when the pointer happened to sit on the 96×28
+   motif itself.
+
+   This is `.rule-expand`'s pattern, which was already correct: both rules
+   anchor on `.group-row`, so the state is the *row* being entered, and
+   every part of it responds together — trace, motif, title, arrow. The
+   three selectors above are retained because they keep the rail's own
+   hover working for a pointer that does land on the motif. */
+.group-row:hover .instrument-row::after,
+.group-row:focus-visible .instrument-row::after,
+.group-row:focus-within .instrument-row::after,
+.group-row:hover .instrument-row:hover::after,
+.group-row:focus-visible .instrument-row:hover::after,
+.group-row:focus-within .instrument-row:hover::after {
+  opacity: 0;
+  transition-delay: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No transition and no mask: the figure is simply present. `content:
+     none` removes the cover rather than leaving it frozen, so a
+     reduced-motion reader never meets a hidden state waiting for an
+     animation that is never going to run. It is the same shape the rest of
+     this file uses — the unsafe state does not exist inside the opt-in,
+     rather than being survivable outside it. */
+  .instrument-row::after,
+  .instrument-row:hover::after,
+  .instrument-row:focus-visible::after,
+  .instrument-row:focus-within::after,
+  .group-row:hover .instrument-row::after,
+  .group-row:focus-visible .instrument-row::after,
+  .group-row:focus-within .instrument-row::after,
+  .group-row:hover .instrument-row:hover::after,
+  .group-row:focus-visible .instrument-row:hover::after,
+  .group-row:focus-within .instrument-row:hover::after {
+    content: none;
+  }
+  .instrument-row::after {
+    transition: none;
+  }
+}
+
+/* ---- Utility link (header GitHub / LinkedIn) ------------------------
+   The header's utility links had a colour change and nothing else, which
+   made them read as plain text next to the primary nav's ruled
+   indicators. They now carry the same rule, drawn under the label — one
+   primitive, three surfaces, so the header has a single interaction
+   language. The rule is a pseudo-element at 100% width scaled on X, so it
+   adds no height and cannot shift the bar. */
+.utility-link {
+  position: relative;
+}
+.utility-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 12px;
+  height: 1px;
+  width: 100%;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--motion-duration-base) var(--motion-ease-standard);
+}
+.utility-link:hover::after,
+.utility-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .utility-link::after {
+    transition: none;
+  }
+}
+
+/* ---- Page-level entrance for interior pages -------------------------
+   Case studies, /work, /experience and /about run the same short sequence
+   on their heading block, so moving between routes feels consistent
+   without a route transition that would need a client boundary (the App
+   Router transition was declined — see the report).
+
+   `/contact` is deliberately not in that list: it is one shared component
+   rendered with `headingLevel="h1"`, and it is also a section on the
+   homepage where `Reveal` already owns its entrance. Adding a second
+   sequence inside the component would animate it in both contexts and
+   fight the reveal that is already there. Consistent does not mean
+   identical, and a duplicated entrance is worse than a plain one. */
+@media (prefers-reduced-motion: no-preference) {
+  .seq-page > * {
+    animation: seq-rise var(--motion-duration-base) var(--motion-ease-standard) both;
+  }
+  .seq-page > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .seq-page > *:nth-child(2) {
+    animation-delay: calc(var(--motion-stagger-tight) * 1);
+  }
+  .seq-page > *:nth-child(3) {
+    animation-delay: calc(var(--motion-stagger-tight) * 2);
+  }
+  .seq-page > *:nth-child(n + 4) {
+    animation-delay: calc(var(--motion-stagger-tight) * 3);
+  }
+}
